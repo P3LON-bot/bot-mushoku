@@ -1,22 +1,48 @@
 import os
+from threading import Thread
 import discord
 from discord.ext import commands
+from flask import Flask
 
-# Configuración inicial del bot de Verificaciones
+# --- Mini servidor web para satisfacer el puerto de Render ---
+app = Flask('')
+
+
+@app.route('/')
+def home():
+  return 'Bot de Verificación activo 24/7'
+
+
+def run():
+  port = int(os.environ.get('PORT', 8080))
+  app.run(host='0.0.0.0', port=port)
+
+
+def keep_alive():
+  t = Thread(target=run)
+  t.daemon = True
+  t.start()
+
+
+# Iniciar el servidor web
+keep_alive()
+
+# --- Configuración del Bot de Discord ---
 intents = discord.Intents.default()
 intents.message_content = True
 
-bot = commands.Bot(command_prefix="!", intents=intents)
+bot = commands.Bot(command_prefix='!', intents=intents)
+
 
 @bot.event
 async def on_ready():
-    print(f"¡Bot de Verificaciones conectado como {bot.user}!")
+  print(f'¡Bot de Verificación conectado como {bot.user}!')
 
-# Aquí va toda la lógica de tus comandos de verificación...
 
-# Ejecutar el bot de forma segura usando la variable de entorno
-TOKEN = os.environ.get("DISCORD_TOKEN_VERIFICATION")
+# Obtener el token de forma segura desde las variables de entorno de Render
+TOKEN = os.environ.get('DISCORD_TOKEN_VERIFICATION')
+
 if TOKEN:
-    bot.run(TOKEN)
+  bot.run(TOKEN)
 else:
-    print("Error: No se encontró el token de verificación en las variables de entorno.")
+  print('Error: No se encontró la variable DISCORD_TOKEN_VERIFICATION')
